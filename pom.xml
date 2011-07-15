@@ -15,7 +15,7 @@
     <packaging>hpi</packaging>
     <name>Jenkins Darcs plugin</name>
     <description>This plugin integrates the Darcs SCM into Jenkis</description>
-    <url>http://weltraumschaf.github.com/jenkins-darcs</url>
+    <url>http://weltraumschaf.github.com/darcs-plugin</url>
 
     <organization>
         <name>weltraumschaf.de</name>
@@ -52,13 +52,13 @@
     
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/Weltraumschaf/jenkins-darcs/issues</url>
+        <url>https://github.com/Weltraumschaf/darcs-plugin/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git://github.com/Weltraumschaf/jenkins-darcs.git</connection>
-        <developerConnection>scm:git:git@github.com:Weltraumschaf/jenkins-darcs.git</developerConnection>
-        <url>https://github.com/Weltraumschaf/jenkins-darcs/</url>
+        <connection>scm:git:git://github.com/Weltraumschaf/darcs-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:Weltraumschaf/darcs-plugin.git</developerConnection>
+        <url>https://github.com/Weltraumschaf/darcs-plugin/</url>
     </scm>
 
     <properties>
@@ -91,7 +91,7 @@
         <maven-release-plugin.version>2.1</maven-release-plugin.version>
         <maven-remote-resources-plugin.version>1.1</maven-remote-resources-plugin.version>
         <maven-resources-plugin.version>2.4.3</maven-resources-plugin.version>
-        <maven-site-plugin.version>2.1.1</maven-site-plugin.version>
+        <maven-site-plugin.version>3.0-beta-3</maven-site-plugin.version>
         <!-- Do not go to 2.1.2: http://jira.codehaus.org/browse/MSOURCES-30 -->
         <maven-source-plugin.version>2.1.2</maven-source-plugin.version>
         <maven-surefire-plugin.version>2.7.2</maven-surefire-plugin.version>
@@ -133,7 +133,7 @@
     <distributionManagement>
         <site>
             <id>github-project-site</id>
-            <url>gitsite:git@github.com/Weltraumschaf/jenkins-darcs</url>
+            <url>gitsite:git@github.com/Weltraumschaf/darcs-plugin</url>
         </site>
     </distributionManagement>
 
