@@ -76,10 +76,6 @@ public class DarcsScm extends SCM implements Serializable {
      * Used repository browser.
      */
     private final DarcsRepositoryBrowser browser;
-    /**
-     * Reused parser.
-     */
-    private final transient DarcsChangeLogParser changelogParser;
 
     /**
      * Convenience constructor.
@@ -101,14 +97,12 @@ public class DarcsScm extends SCM implements Serializable {
      * @param browser the browser used to browse the repository
      */
     @DataBoundConstructor
-    public DarcsScm(final String source, final String localDir, final boolean clean, final DarcsRepositoryBrowser browser)
-            throws SAXException {
+    public DarcsScm(final String source, final String localDir, final boolean clean, final DarcsRepositoryBrowser browser) {
         super();
         this.source = source;
         this.clean = clean;
         this.browser = browser;
         this.localDir = localDir;
-        this.changelogParser = new DarcsChangeLogParser();
     }
 
     /**
@@ -154,13 +148,17 @@ public class DarcsScm extends SCM implements Serializable {
     }
 
     @Override
-    public DarcsRevisionState calcRevisionsFromBuild(final AbstractBuild<?, ?> build, final Launcher launcher,
+    public SCMRevisionState calcRevisionsFromBuild(final AbstractBuild<?, ?> build, final Launcher launcher,
             final TaskListener listener) throws IOException, InterruptedException {
         final FilePath localPath = createLocalPath(build.getWorkspace());
         final DarcsRevisionState local = getRevisionState(launcher, listener, localPath.getRemote(), build.getWorkspace());
-        listener.getLogger()
-                .println("[poll] Calculate revison from build " + local);
 
+        if (null == local) {
+            listener.getLogger().println(String.format("[poll] Got <null> as revision state."));
+            return SCMRevisionState.NONE;
+        }
+
+        listener.getLogger().println(String.format("[poll] Calculate revison from build %s.", local));
         return local;
     }
 
@@ -169,17 +167,17 @@ public class DarcsScm extends SCM implements Serializable {
             final FilePath workspace, final TaskListener listener, final SCMRevisionState baseline)
             throws IOException, InterruptedException {
         final PrintStream logger = listener.getLogger();
-        final DarcsRevisionState localRevisionState;
+        final SCMRevisionState localRevisionState;
 
         if (baseline instanceof DarcsRevisionState) {
             localRevisionState = (DarcsRevisionState) baseline;
-        } else if (project.getLastBuild() != null) {
+        } else if (null != project && null != project.getLastBuild()) {
             localRevisionState = calcRevisionsFromBuild(project.getLastBuild(), launcher, listener);
         } else {
             localRevisionState = new DarcsRevisionState();
         }
 
-        if (null != project.getLastBuild()) {
+        if (null != project && null != project.getLastBuild()) {
             logger.println("[poll] Last Build : #" + project.getLastBuild().getNumber());
         } else {
             // If we've never been built before, well, gotta build!
@@ -202,7 +200,7 @@ public class DarcsScm extends SCM implements Serializable {
             // so do a (fugly) class check.
             logger.println("[poll] local revision state is not of type darcs.");
             change = Change.SIGNIFICANT;
-        } else if (!remoteRevisionState.equals(localRevisionState)) {
+        } else if (null != remoteRevisionState && !remoteRevisionState.equals(localRevisionState)) {
             logger.println("[poll] Local revision state differs from remote.");
 
             if (remoteRevisionState.getChanges().size()
@@ -243,7 +241,7 @@ public class DarcsScm extends SCM implements Serializable {
 
         if (null == launcher) {
             /* Create a launcher on master
-             * todo better grab a launcher on 'any slave'
+             * TODO better grab a launcher on 'any slave'
              */
             cmd = new DarcsCmd(new LocalLauncher(listener), EnvVars.masterEnvVars, getDescriptor().getDarcsExe(), workspace);
         } else {
@@ -254,10 +252,9 @@ public class DarcsScm extends SCM implements Serializable {
 
         try {
             final ByteArrayOutputStream changes = cmd.allChanges(repo);
-            changelogParser.parse(changes);
-            rev = new DarcsRevisionState(changelogParser.parse(changes));
+            rev = new DarcsRevisionState(((DarcsChangeLogParser) createChangeLogParser()).parse(changes));
         } catch (Exception e) {
-            LOGGER.warning(String.format("Failed to get revision state for repository: %s", e));
+            listener.getLogger().println(String.format("[warning] Failed to get revision state for repository: %s", repo));
         }
 
         return rev;
@@ -411,7 +408,7 @@ public class DarcsScm extends SCM implements Serializable {
 
     @Override
     public ChangeLogParser createChangeLogParser() {
-        return changelogParser;
+        return new DarcsChangeLogParser();
     }
 
     @Override
@@ -454,6 +451,10 @@ public class DarcsScm extends SCM implements Serializable {
 
     /** Hack to prevent exceptions on old configs. */
     @Deprecated
-    public static class DescriptorImpl extends DarcsScmDescriptor {}
+    public static class DescriptorImpl extends DarcsScmDescriptor {
+//        public Object readResolve() {
+//            return new DarcsScmDescriptor();
+//        }
+    }
 
 }
